@@ -7,10 +7,10 @@ def naiveSegment(masterVolumeNode,
                 segName="", 
                 segMapName="bone", 
                 to_file=None, 
-                lowerThreshold=20, 
+                lowerThreshold=30, 
                 upperThreshold=255, 
                 smoothSigma=6, 
-                color=(0.3,0.3,0.3),
+                color=(0.5,0.5,0.5),
                 keep_largest_island=False, 
                 cleanUp=False):
     # Create segmentation
