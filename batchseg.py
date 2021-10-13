@@ -11,4 +11,4 @@ for img in imgls:
     volumeNode = loadVolume(file)
     name = volumeNode.GetName()
     outputfile = os.path.join(outputdir, name+".nrrd")
-    naiveSegment(volumeNode, segName=name, segMapName="bone", to_file=outputfile, lowerThreshold=30, upperThreshold=255, smoothSigma=6, keep_largest_island=True)
+    naiveSegment(volumeNode, segName=name, segMapName="bone", to_file=outputfile, lowerThreshold=30, upperThreshold=255, smoothSigma=3, keep_largest_island=True)
