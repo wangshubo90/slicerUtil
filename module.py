@@ -204,7 +204,7 @@ class SegmentMesher3D(ScriptedLoadableModuleTest):
         # cylinder.Update()
         inputSegmentNode = inputSegmentNode
 
-        if not outputModelNode:
+        if outputModelNode is None:
             outputModelNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLModelNode")
         if modelName:
             outputModelNode.SetName(modelName)
