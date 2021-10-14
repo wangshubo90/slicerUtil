@@ -42,6 +42,12 @@ def showVolume(scalarVolume, foreground=None, foregroundOpacity=0):
     slicer.util.setSliceViewerLayers(background=volumeNode, foreground=foreground, foregroundOpacity=foregroundOpacity)
 
 def showSegmentIn3D(segmentation):
+    """
+        segmentation: can be one of the followwing, 
+                str, segmentationNode
+                vtkMRMLSegmentationNode
+                vtkMRMLSegmentationDisplayNode
+    """
     if type(segmentation) == str:
         segmentationNode = slicer.util.getNode(segmentation)
         displayNode = segmentationNode.GetDisplayNode()
@@ -53,6 +59,12 @@ def showSegmentIn3D(segmentation):
     displayNode.SetVisibility3D(1)
 
 def hideSegmentIn3D(segmentation):
+    """
+        segmentation: can be one of the followwing, 
+                str, segmentationNode
+                vtkMRMLSegmentationNode
+                vtkMRMLSegmentationDisplayNode
+    """
     if type(segmentation) == str:
         segmentationNode = slicer.util.getNode(segmentation)
         displayNode = segmentationNode.GetDisplayNode()
@@ -64,6 +76,9 @@ def hideSegmentIn3D(segmentation):
     displayNode.SetVisibility3D(0)
 
 def capture3Dview(outputfile):
+    """
+        outputfile : str, output file name
+    """
     renderWindow = slicer.app.layoutManager().threeDWidget(0).threeDView().renderWindow()
     renderWindow.SetAlphaBitPlanes(1)
     wti = vtk.vtkWindowToImageFilter()
@@ -99,9 +114,6 @@ def naiveSegment(masterVolumeNode,
     segmentationNode.SetReferenceImageGeometryParameterFromVolumeNode(masterVolumeNode)
     segmentationNode.SetName(segName)
     addedSegmentID = segmentationNode.GetSegmentation().AddEmptySegment(segMapName)
-    segmentationNode.GetSegmentation().GetSegment(addedSegmentID).SetColor(*color)
-    assert segmentationNode.GetSegmentation().GetSegment(addedSegmentID).GetColor() == color
-
     # Create segment editor to get access to effects
     if segmentEditorWidget is None:
         segmentEditorWidget = slicer.qMRMLSegmentEditorWidget()
@@ -137,6 +149,9 @@ def naiveSegment(masterVolumeNode,
 
     # Make segmentation results visible in 3D
     segmentationNode.CreateClosedSurfaceRepresentation()
+    # set color
+    segmentationNode.GetSegmentation().GetSegment(addedSegmentID).SetColor(*color)
+    assert segmentationNode.GetSegmentation().GetSegment(addedSegmentID).GetColor() == color
 
     if to_file:
         slicer.util.saveNode(segmentationNode, to_file)
