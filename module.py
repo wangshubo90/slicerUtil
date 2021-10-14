@@ -74,6 +74,13 @@ def capture3Dview(outputfile):
     writer.SetInputConnection(wti.GetOutputPort())
     writer.Write()
 
+def startSegmentationEditor():
+    segmentEditorWidget = slicer.qMRMLSegmentEditorWidget()
+    segmentEditorWidget.setMRMLScene(slicer.mrmlScene)
+    segmentEditorNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentEditorNode")
+    segmentEditorWidget.setMRMLSegmentEditorNode(segmentEditorNode)
+    return {"segmentEditorWidget":segmentEditorWidget, "segmentEditorNode":segmentEditorNode}
+
 def naiveSegment(masterVolumeNode,
                 segmentEditorNode=None, 
                 segmentEditorWidget=None, 
@@ -93,12 +100,13 @@ def naiveSegment(masterVolumeNode,
     segmentationNode.SetName(segName)
     addedSegmentID = segmentationNode.GetSegmentation().AddEmptySegment(segMapName)
     segmentationNode.GetSegmentation().GetSegment(addedSegmentID).SetColor(*color)
+    assert segmentationNode.GetSegmentation().GetSegment(addedSegmentID).GetColor() == color
 
     # Create segment editor to get access to effects
-    if segmentEditorWidget == None:
+    if segmentEditorWidget is None:
         segmentEditorWidget = slicer.qMRMLSegmentEditorWidget()
     segmentEditorWidget.setMRMLScene(slicer.mrmlScene)
-    if segmentationNode == None:
+    if segmentationNode is None:
         segmentEditorNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentEditorNode")
     segmentEditorWidget.setMRMLSegmentEditorNode(segmentEditorNode)
     segmentEditorWidget.setSegmentationNode(segmentationNode)
