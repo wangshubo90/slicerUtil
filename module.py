@@ -207,7 +207,7 @@ class SegmentMesher3D(ScriptedLoadableModuleTest):
         if not outputModelNode:
             outputModelNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLModelNode")
         if modelName:
-            outputModelNode.SetName()
+            outputModelNode.SetName(modelName)
         outputModelNode.CreateDefaultDisplayNodes()
 
         cleaverConfig = {

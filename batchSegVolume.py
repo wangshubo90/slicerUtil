@@ -3,10 +3,13 @@ from slicerUtil.module import *
 import os
 import time
 
+# white background withoud box and coordinates
+set3Dview(viewNode=None, bkgrColor=(255,255,255), bkgrColor2=(255,255,255), boxVisible=0, labelsVisible=0) 
+
 nodes = slicer.util.getNodes("epoch*").values()
 segEdConfig = startSegmentationEditor()
 for node in nodes:
-    _ = naiveSegment(node, segName=node.GetName(), segMapName="bone", lowerThreshold=0.02, smoothSigma=1, **segEdConfig)
+    _ = naiveSegment(node, segName=node.GetName()+"_seg", segMapName="bone", lowerThreshold=0.02, smoothSigma=1, **segEdConfig)
 
 color=(0.5,0.5,0.5)
 segnodes = slicer.util.getNodes("*seg").values()
