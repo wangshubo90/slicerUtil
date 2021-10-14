@@ -2,7 +2,7 @@ import re
 import vtk, qt, ctk, slicer
 from SegmentMesher import SegmentMesherLogic
 from slicer.ScriptedLoadableModule import *
-from slicerUtil.naiveSegment import naiveSegment
+from naiveSegment import naiveSegment
 
 def findProperty(obj, re_patter):
     return [i for i in dir(obj) if re.search(re_patter, i)]
@@ -29,12 +29,50 @@ def iterScalarVolume(func):
         if node.IsA("vtkMRMLScalarVolumeNode"):
             func(node)
 
-def showVolume(scalarVolume):
+def showVolume(scalarVolume, foreground=None, foregroundOpacity=0):
     if type(scalarVolume) == str:
-        volumeNode = slicer.util.getNode("YourVolumeNode")
-    elif scalarVolume.IsA("vtkMRMLScalarVolumeDisplayNode"):
+        volumeNode = slicer.util.getNode(scalarVolume)
+    elif scalarVolume.IsA("vtkMRMLScalarVolumeNode"):
         volumeNode = scalarVolume
-    slicer.util.setSliceViewerLayers(background=volumeNode)
+    if not foreground is None:
+        if type(scalarVolume) == str:
+            foreground= slicer.util.getNode(foreground)
+        else:
+            pass
+    slicer.util.setSliceViewerLayers(background=volumeNode, foreground=foreground, foregroundOpacity=foregroundOpacity)
+
+def showSegmentIn3D(segmentation):
+    if type(segmentation) == str:
+        segmentationNode = slicer.util.getNode(segmentation)
+        displayNode = segmentationNode.GetDisplayNode()
+    elif segmentation.IsA("vtkMRMLSegmentationNode"):
+        segmentationNode = segmentation
+        displayNode = segmentationNode.GetDisplayNode()
+    elif segmentation.IsA("vtkMRMLSegmentationDisplayNode"):
+        displayNode = segmentation
+    displayNode.SetVisibility3D(1)
+
+def hideSegmentIn3D(segmentation):
+    if type(segmentation) == str:
+        segmentationNode = slicer.util.getNode(segmentation)
+        displayNode = segmentationNode.GetDisplayNode()
+    elif segmentation.IsA("vtkMRMLSegmentationNode"):
+        segmentationNode = segmentation
+        displayNode = segmentationNode.GetDisplayNode()
+    elif segmentation.IsA("vtkMRMLSegmentationDisplayNode"):
+        displayNode = segmentation
+    displayNode.SetVisibility3D(0)
+
+def capture3Dview(outputfile):
+    renderWindow = slicer.app.layoutManager().threeDWidget(0).threeDView().renderWindow()
+    renderWindow.SetAlphaBitPlanes(1)
+    wti = vtk.vtkWindowToImageFilter()
+    wti.SetInputBufferTypeToRGBA()
+    wti.SetInput(renderWindow)
+    writer = vtk.vtkPNGWriter()
+    writer.SetFileName(outputfile)
+    writer.SetInputConnection(wti.GetOutputPort())
+    writer.Write()
 
 class SegmentMesher3D(ScriptedLoadableModuleTest):
     """

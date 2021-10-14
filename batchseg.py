@@ -1,6 +1,6 @@
 import os
 from naiveSegment import naiveSegment
-from utils import *
+from module import *
 
 masterdir = r"C:\Users\wangs\Documents\35_um_data_100x100x48 niis\Data"
 outputdir = r"C:\temp"
@@ -11,4 +11,4 @@ for img in imgls:
     volumeNode = loadVolume(file)
     name = volumeNode.GetName()
     outputfile = os.path.join(outputdir, name+".nrrd")
-    naiveSegment(volumeNode, segName=name, segMapName="bone", to_file=outputfile, lowerThreshold=30, upperThreshold=255, smoothSigma=3, keep_largest_island=True)
+    naiveSegment(volumeNode, segName=name, segMapName="bone", to_file=None, lowerThreshold=30, upperThreshold=255, smoothSigma=3, keep_largest_island=True)
