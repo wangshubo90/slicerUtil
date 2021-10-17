@@ -101,7 +101,7 @@ def GetAllSegment(segmentation):
         segmentation = segNode.GetSegmentation
     
     stringArray = vtk.vtkStringArray()
-    segNode.GetSegmentIDs(stringArray)
+    segmentation.GetSegmentIDs(stringArray)
     segments = {}
     for i in range(stringArray.GetNumberOfValues()):
         segmentID = stringArray.GetValue(i)
@@ -176,8 +176,7 @@ def naiveSegment(masterVolumeNode,
 
     if to_file:
         slicer.util.saveNode(segmentationNode, to_file)
-    else:
-        return segmentationNode, segmentEditorNode, segmentEditorWidget
+    return segmentationNode, segmentEditorNode, segmentEditorWidget
 
 class SegmentMesher3D(ScriptedLoadableModuleTest):
     """
@@ -205,7 +204,7 @@ class SegmentMesher3D(ScriptedLoadableModuleTest):
         """
         self.generateMesh(inputSegmentNode, outputModelNode, **kwards)
 
-    def generateMesh(self, inputSegmentNode, outputModelNode=None,  modelName=None, **kwargs):
+    def generateMesh(self, inputSegmentNode, outputModelNode=None,  modelName=None, segments=[], **kwargs):
         """ Ideally you should have several levels of tests.  At the lowest level
         tests should exercise the functionality of the logic with different inputs
         (both valid and invalid).  At higher levels your tests should emulate the
@@ -231,8 +230,7 @@ class SegmentMesher3D(ScriptedLoadableModuleTest):
             outputModelNode.SetName(modelName)
         outputModelNode.CreateDefaultDisplayNodes()
 
-        cleaverConfig = {
-            "segments": [], 
+        cleaverConfig = { 
             "additionalParameters": None, 
             "removeBackgroundMesh": True, 
             "paddingRatio": 0.10, 
@@ -246,6 +244,7 @@ class SegmentMesher3D(ScriptedLoadableModuleTest):
         logic.createMeshFromSegmentationCleaver(
             inputSegmentNode, 
             outputModelNode, 
+            segments,
             **cleaverConfig)
 
         self.assertTrue(outputModelNode.GetMesh().GetNumberOfPoints()>0)
