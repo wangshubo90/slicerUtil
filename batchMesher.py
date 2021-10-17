@@ -44,7 +44,4 @@ for node in nodes:
         modelName=node.GetName() + "_model",
         segments=segments,
     )
-    
-
-
-    
+    slicer.util.saveNode(modelNode, os.path.join(outputDir, modelNode.GetName()+".vtk")) 

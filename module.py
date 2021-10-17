@@ -95,11 +95,9 @@ def GetAllSegment(segmentation):
     """
     if type(segmentation) is str:
         segNode = slicer.util.getNode(segmentation)
-        segmentation = segNode.GetSegmentation
     elif segmentation.IsA("vtkMRMLSegmentationNode"):
         segNode=segmentation
-        segmentation = segNode.GetSegmentation
-    
+    segmentation = segNode.GetSegmentation()
     stringArray = vtk.vtkStringArray()
     segmentation.GetSegmentIDs(stringArray)
     segments = {}
