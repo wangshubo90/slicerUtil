@@ -89,6 +89,27 @@ def capture3Dview(outputfile):
     writer.SetInputConnection(wti.GetOutputPort())
     writer.Write()
 
+def GetAllSegment(segmentation):
+    """
+        segmentation: either ID or the node of a segmentation
+    """
+    if type(segmentation) is str:
+        segNode = slicer.util.getNode(segmentation)
+        segmentation = segNode.GetSegmentation
+    elif segmentation.IsA("vtkMRMLSegmentationNode"):
+        segNode=segmentation
+        segmentation = segNode.GetSegmentation
+    
+    stringArray = vtk.vtkStringArray()
+    segNode.GetSegmentIDs(stringArray)
+    segments = {}
+    for i in range(stringArray.GetNumberOfValues()):
+        segmentID = stringArray.GetValue(i)
+        segment = segmentation.GetSegment(segmentID)
+        segments[segmentID] = segment
+
+    return segments
+
 def startSegmentationEditor():
     segmentEditorWidget = slicer.qMRMLSegmentEditorWidget()
     segmentEditorWidget.setMRMLScene(slicer.mrmlScene)

@@ -24,3 +24,5 @@ for node in segnodes:
     capture3Dview(os.path.join(fd, node.GetName()+".png"))
     time.sleep(0.5)
     hideSegmentIn3D(node)
+
+slicer.mrmlScene.Clear(0)

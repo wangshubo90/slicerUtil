@@ -1,5 +1,5 @@
 import os
-from naiveSegment import naiveSegment
+from slicerUtil import *
 from module import *
 
 masterdir = r"C:\Users\wangs\Documents\35_um_data_100x100x48 niis\Data"
