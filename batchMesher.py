@@ -1,8 +1,11 @@
 import os, glob
 from slicerUtil.module import *
+from module import switchToMicroCTScale
 from slicerUtil.sitkUtil import *
 import slicer
 import meshio
+
+switchToMicroCTScale()
 
 # import data and get a list() of volumeNodes
 inputDir = r"C:\Users\wangs\Documents\35_um_data_100x100x48 niis\Data"
@@ -11,9 +14,10 @@ outputDir = r"C:\Users\wangs\Documents\35_um_data_100x100x48 niis\meshes"
 fileList = ["236LT_w1.nii.gz", "236LT_w2.nii.gz"]
 for f in fileList:
     sitkimg = sitk.ReadImage(os.path.join(inputDir,f))
-    sitkimg.SetSpacing((0.03,0.03,0.03))
+    # sitkimg.SetSpacing((0.03,0.03,0.03))
+    sitkimg.SetSpacing((30,30,30))
     sitkimg.SetDirection([1,0,0, 0,1,0, 0,0,1])
-    sitkimg.SetOrigin(1.5, 1.5, 0.72)
+    sitkimg.SetOrigin((1500, 1500, 720))
     vNode = PushVolumeToSlicer(sitkimg, name=f[:-7])
     # vNode.SetSpacing(0.03,0.03,0.03)
     # vNode.SetOrigin(0, 0, 0)

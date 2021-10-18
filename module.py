@@ -7,6 +7,24 @@ import SimpleITK as sitk
 def clearUp():
     slicer.mrmlScene.Clear(0)
 
+def switchToMicroCTScale():
+    lm = slicer.app.layoutManager()
+    for sliceViewName in lm.sliceViewNames():
+        sliceView = lm.sliceWidget(sliceViewName).sliceView()
+        displayableManager = sliceView.displayableManagerByClassName("vtkMRMLRulerDisplayableManager")
+        displayableManager.RemoveAllRulerScalePresets()
+        displayableManager.AddRulerScalePreset(   0.001, 5, 2, "nm", 1000.0)
+        displayableManager.AddRulerScalePreset(   0.010, 5, 2, "nm", 1000.0)
+        displayableManager.AddRulerScalePreset(   0.100, 5, 2, "nm", 1000.0)
+        displayableManager.AddRulerScalePreset(   0.500, 5, 1, "nm", 1000.0)
+        displayableManager.AddRulerScalePreset(   1.0,   5, 2, "um",    1.0)
+        displayableManager.AddRulerScalePreset(   5.0,   5, 1, "um",    1.0)
+        displayableManager.AddRulerScalePreset(  10.0,   5, 2, "um",    1.0)
+        displayableManager.AddRulerScalePreset(  50.0,   5, 1, "um",    1.0)
+        displayableManager.AddRulerScalePreset( 100.0,   5, 2, "um",    1.0)
+        displayableManager.AddRulerScalePreset( 500.0,   5, 1, "um",    1.0)
+        displayableManager.AddRulerScalePreset(1000.0,   5, 2, "mm",    0.001)
+
 def findProperty(obj, re_patter):
     return [i for i in dir(obj) if re.search(re_patter, i)]
 
