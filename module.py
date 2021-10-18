@@ -4,6 +4,9 @@ from SegmentMesher import SegmentMesherLogic
 from slicer.ScriptedLoadableModule import *
 import SimpleITK as sitk
 
+def clearUp():
+    slicer.mrmlScene.Clear(0)
+
 def findProperty(obj, re_patter):
     return [i for i in dir(obj) if re.search(re_patter, i)]
 
