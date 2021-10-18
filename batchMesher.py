@@ -9,6 +9,7 @@ outputDir = r"C:\Users\wangs\Documents\35_um_data_100x100x48 niis\meshes"
 fileList = ["236LT_w1.nii.gz", "236LT_w2.nii.gz"]
 for f in fileList:
     vNode = loadVolume(os.path.join(inputDir, f))
+
 nodes = slicer.util.getNodes("*_w*").values()
 
 # format the 3D view
@@ -40,8 +41,8 @@ for node in nodes:
     )
     segments = GetAllSegment(segNode) # get all the segments from a segmentationNode
     modelNode = logic.generateMesh(
-        node, segNode,
+        segNode, None,
         modelName=node.GetName() + "_model",
         segments=segments,
     )
-    slicer.util.saveNode(modelNode, os.path.join(outputDir, modelNode.GetName()+".vtk")) 
+    slicer.util.saveNode(modelNode, os.path.join(outputDir, modelNode.GetName()+".vtu")) 
