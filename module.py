@@ -1,6 +1,6 @@
 import re
 import vtk, qt, ctk, slicer
-from SegmentMesher import SegmentMesherLogic
+from mesher import SegmentMesherLogic
 from slicer.ScriptedLoadableModule import *
 import SimpleITK as sitk
 

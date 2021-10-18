@@ -642,7 +642,7 @@ class SegmentMesherLogic(ScriptedLoadableModuleLogic):
     return dirPath
 
   def createMeshFromSegmentationCleaver(self, inputSegmentation, outputMeshNode, segments = [], additionalParameters = None, removeBackgroundMesh = False, 
-    paddingRatio = 0.10, featureScale = 2, samplingRate=0.2, rateOfChange=0.2):
+    paddingRatio = 0.10, featureScale = 2, samplingRate=0.2, rateOfChange=0.2, blendSigma=0.0):
 
     if additionalParameters is None:
       additionalParameters=""
@@ -722,7 +722,7 @@ class SegmentMesherLogic(ScriptedLoadableModuleLogic):
     inputParamsCleaver.extend(["--feature_scaling", "{:.2f}".format(featureScale)])
     inputParamsCleaver.extend(["--sampling_rate", "{:.2f}".format(samplingRate)])
     inputParamsCleaver.extend(["--lipschitz", "{:.2f}".format(rateOfChange)])
-    
+    inputParamsCleaver.append(["--blend_sigma", "{:.2f}".format(blendSigma)])
     # Set up output format
 
     inputParamsCleaver.extend(["--output_path", tempDir+"/"])
