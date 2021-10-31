@@ -1,8 +1,9 @@
 import re
 import vtk, qt, ctk, slicer
-from mesher import SegmentMesherLogic
+from SegmentMesher import SegmentMesherLogic
 from slicer.ScriptedLoadableModule import *
 import SimpleITK as sitk
+import time
 
 def clearUp():
     slicer.mrmlScene.Clear(0)
@@ -26,7 +27,7 @@ def switchToMicroCTScale():
         displayableManager.AddRulerScalePreset(1000.0,   5, 2, "mm",    0.001)
 
 def findProperty(obj, re_patter):
-    return [i for i in dir(obj) if re.search(re_patter, i)]
+    return [i for i in dir(obj) if re.search(re_patter, i.lower())]
 
 def set3Dview(viewNode=None, bkgrColor=(255,255,255), bkgrColor2=(255,255,255), boxVisible=0, labelsVisible=0):
     if viewNode is None:
@@ -129,6 +130,15 @@ def GetAllSegment(segmentation):
 
     return segments
 
+def getModelFromSegmentation(segmentation, folderName):
+    if type(segmentation) is str:
+        segNode = slicer.util.getNode(segmentation)
+    elif segmentation.IsA("vtkMRMLSegmentationNode"):
+        segNode=segmentation
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    exportFolderItemId = shNode.CreateFolderItem(shNode.GetSceneItemID(), folderName)
+    slicer.modules.segmentations.logic().ExportAllSegmentsToModels(segNode, exportFolderItemId)
+
 def startSegmentationEditor():
     segmentEditorWidget = slicer.qMRMLSegmentEditorWidget()
     segmentEditorWidget.setMRMLScene(slicer.mrmlScene)
@@ -147,6 +157,7 @@ def naiveSegment(masterVolumeNode,
                 smoothSigma=6, 
                 color=(0.5,0.5,0.5),
                 keep_largest_island=False, 
+                openningRad=3,
                 cleanUp=False):
     # Create segmentation
     segmentationNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
@@ -178,9 +189,19 @@ def naiveSegment(masterVolumeNode,
     effect.setParameter("KernelSizeMm", smoothSigma)
     effect.self().onApply()
 
+    segmentEditorWidget.setActiveEffectByName("Margin")
+    effect = segmentEditorWidget.activeEffect()
+    effect.setParameter("MarginSizeMm", "-{}".format(openningRad))
+    effect.self().onApply()
+    effect.setParameter("MarginSizeMm", "{}".format(openningRad))
+    effect.self().onApply()
+    # effect.setParameter("MarginSizeMm", "-15")
+    # effect.self().onApply()
+
     if keep_largest_island:
         segmentEditorWidget.setActiveEffectByName("Islands")
-        effect.setParameter("Operation", "KEEP_LARGEST_ISLANDS") # check other parameters https://slicer.readthedocs.io/en/latest/developer_guide/modules/segmenteditor.html
+        effect = segmentEditorWidget.activeEffect()
+        effect.setParameter("Operation", "KEEP_LARGEST_ISLAND") # check other parameters https://slicer.readthedocs.io/en/latest/developer_guide/modules/segmenteditor.html
         effect.self().onApply()
 
     if cleanUp:
@@ -196,6 +217,8 @@ def naiveSegment(masterVolumeNode,
     if to_file:
         slicer.util.saveNode(segmentationNode, to_file)
     return segmentationNode, segmentEditorNode, segmentEditorWidget
+
+# def savePolyModel
 
 class SegmentMesher3D(ScriptedLoadableModuleTest):
     """
@@ -223,7 +246,7 @@ class SegmentMesher3D(ScriptedLoadableModuleTest):
         """
         self.generateMesh(inputSegmentNode, outputModelNode, **kwards)
 
-    def generateMesh(self, inputSegmentNode, outputModelNode=None,  modelName=None, segments=[], **kwargs):
+    def generateMeshCleaver(self, inputSegmentNode, outputModelNode=None,  modelName=None, segments=[], **kwargs):
         """ Ideally you should have several levels of tests.  At the lowest level
         tests should exercise the functionality of the logic with different inputs
         (both valid and invalid).  At higher levels your tests should emulate the
@@ -265,6 +288,61 @@ class SegmentMesher3D(ScriptedLoadableModuleTest):
             outputModelNode, 
             segments,
             **cleaverConfig)
+
+        self.assertTrue(outputModelNode.GetMesh().GetNumberOfPoints()>0)
+        self.assertTrue(outputModelNode.GetMesh().GetNumberOfCells()>0)
+
+        # inputModelNode.GetDisplayNode().SetOpacity(0.2)
+
+        outputDisplayNode = outputModelNode.GetDisplayNode()
+        outputDisplayNode.SetColor(1,0,0)
+        outputDisplayNode.SetEdgeVisibility(True)
+        outputDisplayNode.SetClipping(False)
+
+        clipNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLClipModelsNode")
+        clipNode.SetRedSliceClipState(clipNode.ClipNegativeSpace)
+
+        return outputModelNode
+
+    def generateMeshTetGen(self, inputModelNode, outputModelNode=None,  modelName=None, saveDir=None, **kwargs):
+        """ Ideally you should have several levels of tests.  At the lowest level
+        tests should exercise the functionality of the logic with different inputs
+        (both valid and invalid).  At higher levels your tests should emulate the
+        way the user would interact with your code and confirm that it still works
+        the way you intended.
+        One of the most important features of the tests is that it should alert other
+        developers when their changes will have an impact on the behavior of your
+        module.  For example, if a developer removes a feature that you depend on,
+        your test should break so they know that the feature is needed.
+        """
+
+        self.delayDisplay("Starting the test")
+
+        # cylinder = vtk.vtkCylinderSource()
+        # cylinder.SetRadius(10)
+        # cylinder.SetHeight(40)
+        # cylinder.Update()
+
+        if outputModelNode is None:
+            outputModelNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLModelNode")
+        if modelName:
+            outputModelNode.SetName(modelName)
+        outputModelNode.CreateDefaultDisplayNodes()
+
+        tetGenConfig = { 
+            "additionalParameters": "None", 
+            "ratio": 5, 
+            "angle": 0, 
+            "volume": 10}
+        
+        tetGenConfig.update(kwargs)
+
+        logic = SegmentMesherLogic()
+        logic.deleteTemporaryFiles = False
+        logic.createMeshFromPolyDataTetGen(
+            inputModelNode.GetPolyData(), 
+            outputModelNode, 
+            **tetGenConfig)
 
         self.assertTrue(outputModelNode.GetMesh().GetNumberOfPoints()>0)
         self.assertTrue(outputModelNode.GetMesh().GetNumberOfCells()>0)

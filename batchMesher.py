@@ -1,28 +1,35 @@
 import os, glob
 from slicerUtil.module import *
-from module import switchToMicroCTScale
 from slicerUtil.sitkUtil import *
 import slicer
 import meshio
 
-switchToMicroCTScale()
+# switchToMicroCTScale()
 
 # import data and get a list() of volumeNodes
 inputDir = r"C:\Users\wangs\Documents\35_um_data_100x100x48 niis\Data"
 outputDir = r"C:\Users\wangs\Documents\35_um_data_100x100x48 niis\meshes"
 
-fileList = ["236LT_w1.nii.gz", "236LT_w2.nii.gz"]
+fileList = ["322LT_w3.nii.gz"]
 for f in fileList:
     sitkimg = sitk.ReadImage(os.path.join(inputDir,f))
-    sitkimg = sitkimg[2:96, 2:96, :]
-    # sitkimg.SetSpacing((0.03,0.03,0.03))
+    sitkimg = sitkimg[2:98, 2:98, :]
     sitkimg.SetSpacing((30,30,30))
     sitkimg.SetDirection([1,0,0, 0,1,0, 0,0,1])
-    sitkimg.SetOrigin((0, 0, 0))
-    vNode = PushVolumeToSlicer(sitkimg, name=f[:-7])
+    sitkimg.SetOrigin((1440, 1440, 720))
+    # sitkimg = down_scale(sitkimg, down_scale_factor=0.5)
+    sitkimg = sitk.BinaryThreshold(sitkimg, lowerThreshold=30, upperThreshold=255)
+    sitkimg = sitk.Cast(sitkimg, sitk.sitkUInt8)
+    openfilter = sitk.BinaryMorphologicalClosingImageFilter()
+    openfilter.SetKernelRadius(1)
+    sitkimg = openfilter.Execute(sitkimg)
+    sitkimg = sitk.BinaryGrindPeak(sitkimg, fullyConnected=True)
+    # sitkimg.SetSpacing((0.03,0.03,0.03))
+    vNode = PushVolumeToSlicer(sitkimg*2, name=f[:-7])
     # vNode.SetSpacing(0.03,0.03,0.03)
     # vNode.SetOrigin(0, 0, 0)
     # vNode.SetIJKToRASDirections([[1,0,0], [0,1,0], [0,0,1]])
+    showVolume(vNode)
 
 nodes = slicer.util.getNodes("*_w*").values()
 
@@ -44,24 +51,39 @@ for node in nodes:
         segmentEditorNode=segEditorNode, 
         segmentEditorWidget=segEditorWidge, 
         segName=node.GetName() + "_seg", 
-        segMapName="bone", 
+        segMapName=node.GetName(), 
         to_file=None, 
-        lowerThreshold=30, 
+        lowerThreshold=1, 
         upperThreshold=255, 
-        smoothSigma=4, 
+        smoothSigma=3, 
         color=(0.5,0.5,0.5),
         keep_largest_island=True, 
-        cleanUp=False
+        cleanUp=False,
+        openningRad=1
     )
     segments = GetAllSegment(segNode) # get all the segments from a segmentationNode
-    modelNode = logic.generateMesh(
-        segNode, None,
-        modelName=node.GetName() + "_model",
-        segments=segments,
-        featureScale=60,
-    )
-    slicer.util.saveNode(modelNode, os.path.join(outputDir, modelNode.GetName()+".vtu")) 
+    getModelFromSegmentation(segNode, "model"+node.GetName())
+    modelNode = slicer.util.getNode(node.GetName())
+    # modelNode = logic.generateMesh(
+    #     segNode, None,
+    #     modelName=node.GetName() + "_model",
+    #     segments=segments,
+    #     featureScale=3,
+    #     samplingRate=0.7,
+    #     additionalParameters="--B 1"
+    # )
+    logic.generateMeshTetGen(modelNode, modelName="Mesh"+modelNode.GetName(),
+        ratio = 2,
+        angle = 20,
+        volume = 50,
+        additionalParameters = "R")
+    slicer.util.saveNode(modelNode, os.path.join(outputDir, "slicer"+modelNode.GetName()+"_3mm.vtk")
+    ) 
 
-for model in glob.glob(os.path.join(outputDir, "*.vtu")):
+for model in glob.glob(os.path.join(outputDir, "*.vtk")):
     mesh = meshio.read(model)
-    mesh.write(model.replace("vtu", "inp"), file_format="abaqus")
+    mesh.write(model.replace("vtk", "inp"), file_format="abaqus")
+
+
+    # ,
+    #     additionalParameters="--sigma_blend 20"

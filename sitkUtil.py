@@ -3,6 +3,7 @@ import ctk
 import vtk
 import SimpleITK as sitk
 import warnings
+import numpy as np
 
 __sitk__MRMLIDImageIO_Registered__ = False
 
@@ -63,3 +64,28 @@ def EnsureRegistration():
     vl = slicer.modules.volumes.logic()
     volumeNode = vl.AddArchetypeVolume('_DUMMY_DOES_NOT_EXIST__','invalidRead')
     __sitk__MRMLIDImageIO_Registered__ = True
+
+def down_scale(tar_img,down_scale_factor=1.0,new_dtype=sitk.sitkFloat32):
+    '''
+    Description:
+        Use sitk.Resample method to extract an image with lower resolution
+    Args:
+        tar_img: sitk.Image / numpy.ndarray
+        down_scale_factor:  float/double, 
+    Returns:
+        sitk.Image
+    '''
+    if type(tar_img) == np.ndarray:
+        tar_img = sitk.GetImageFromArray(tar_img)
+
+    dimension = sitk.Image.GetDimension(tar_img)
+    idt_transform = sitk.Transform(dimension,sitk.sitkIdentity)
+    resample_size = [int(i/down_scale_factor) for i in sitk.Image.GetSize(tar_img)]
+    resample_spacing = [i*down_scale_factor for i in sitk.Image.GetSpacing(tar_img)]
+    resample_origin = sitk.Image.GetOrigin(tar_img)
+    resample_direction = sitk.Image.GetDirection(tar_img)
+    new_img = sitk.Resample(sitk.Cast(tar_img,sitk.sitkFloat32),resample_size, idt_transform, sitk.sitkLinear,
+                     resample_origin,resample_spacing,resample_direction,new_dtype)
+    new_img = sitk.Cast(new_img,new_dtype)
+
+    return new_img
